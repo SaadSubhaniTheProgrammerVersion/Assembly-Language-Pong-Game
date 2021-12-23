@@ -19,6 +19,7 @@ Paddle_speed DW 0Fh
 
 Paddle_Width DW 05h
 Paddle_Length DW 28h
+Restore_Paddle_Length DW 28h
 
 CentreX DW 95h
 CentreY DW 60H
@@ -183,13 +184,14 @@ nopaddle2:
 
     Xcollide:
         NEG Ball_xvelocity
+        dec Paddle_Length
+       
         ret
     Ycollide:
         NEG Ball_yvelocity
         ret
     
-    inc Ball_xvelocity
-    inc Ball_yvelocity
+    
     
 endmotion:  
     
@@ -212,8 +214,13 @@ mov bx,initial_Ball_yvelocity
 mov Ball_xvelocity,ax
 mov Ball_yvelocity,bx
 
+mov ax,Restore_Paddle_Length
+mov Paddle_Length,ax
+
 mov ax,0
 mov bx,0
+
+
 
 ret
 RestoreBall endp
