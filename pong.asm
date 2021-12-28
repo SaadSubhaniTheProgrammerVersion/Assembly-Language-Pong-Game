@@ -1,6 +1,32 @@
 .model small
 
 .data
+
+
+; title1 DB '        __     ___           ____ $'  
+; title2 DB '       |__|   |   |  |\  |  |     $'
+; title3 DB '       |      |   |  | \ |  |  ___$'
+; title4 DB '       |      |___|  |  \|  |____|$'
+
+title1 DB'        ____  ____  _      _____$'
+title2 DB'       /  __\/  _ \/ \  /|/  __/$'
+title3 DB'       |  \/|| / \|| |\ ||| |  _$'
+title4 DB'       |  __/| \_/|| | \||| |_//$'
+title5 DB'       \_/   \____/\_/  \|\____\$'
+                         
+space1 DB '                                  $'
+option1 DB'          1. Play Game            $'
+option2 DB'          2. What are the controls?$'
+option3 DB'          3. Exit Game             $' 
+
+instruction1 DB'   Press q and a to move the blue paddle (left one) UP and DOWN$'
+instruction2 DB'   Press i and k to move the red paddle  (right one) UP and DOWN$'
+instruction3 DB'   Press esc to quit game while playing$'
+
+
+Red_Lives DW 5d
+Blue_Lives DW 5d
+
 Ball_x DW 95h ;balls x axis
 Ball_y DW 60H ;balls y axis 
 Ball_size DW 05h
@@ -11,9 +37,13 @@ initial_Ball_xvelocity DW 05h
 initial_Ball_yvelocity DW 02h
 
 Paddle_Right_x DW 135h
+Restore_Paddle_Right_x DW 135h
 Paddle_Right_y DW 50H
+Restore_Paddle_Right_y DW 50H
 Paddle_Left_x DW 04h
+Restore_Paddle_Left_x DW 04h
 Paddle_Left_y DW 60H
+Restore_Paddle_Left_y DW 60H
 
 Paddle_speed DW 0Fh
 
@@ -26,6 +56,10 @@ CentreY DW 60H
 
 Display_width DW 13Ah ;320px
 Display_height DW 0C6h ;200px
+
+
+
+
 .code
 MAIN PROC
 mov ax, @data
@@ -40,7 +74,140 @@ mov ds, ax
     mov bl,00h;black color
     INT 10h
 
+lea dx, title1
+mov ah, 09h
+int 21h
+mov dl, 10        ;PRINTING NEW LINE
+mov ah, 02h
+int 21h 
 
+lea dx, title2
+mov ah, 09h
+int 21h
+mov dl, 10        
+mov ah, 02h
+int 21h
+
+lea dx, title3
+mov ah, 09h
+int 21h
+mov dl, 10
+mov ah, 02h
+int 21h
+
+lea dx, title4
+mov ah, 09h
+int 21h
+mov dl, 10
+mov ah, 02h
+int 21h
+
+lea dx, title5
+mov ah, 09h
+int 21h
+mov dl, 10
+mov ah, 02h
+int 21h
+
+lea dx, space1
+mov ah, 09h
+int 21h
+mov dl, 10
+mov ah, 02h
+int 21h
+
+lea dx, space1
+mov ah, 09h
+int 21h
+mov dl, 10
+mov ah, 02h
+int 21h
+
+lea dx, space1
+mov ah, 09h
+int 21h
+mov dl, 10
+mov ah, 02h
+int 21h
+
+lea dx, option1
+mov ah, 09h
+int 21h
+mov dl, 10
+mov ah, 02h
+int 21h
+
+lea dx, option2
+mov ah, 09h
+int 21h
+mov dl, 10
+mov ah, 02h
+int 21h
+
+lea dx, option3
+mov ah, 09h
+int 21h
+mov dl, 10
+mov ah, 02h
+int 21h
+
+again:
+mov ah,00h
+int 16h
+cmp al,31h  ;ascii check for key 1
+    je start
+
+cmp al,33h ;ascii check for key 3
+    je Exit
+    
+cmp al,32h ;ascii check for the key 2
+    jne again
+
+
+
+lea dx, space1
+mov ah, 09h
+int 21h
+mov dl, 10
+mov ah, 02h
+int 21h
+
+
+lea dx, instruction1
+mov ah, 09h
+int 21h
+mov dl, 10
+mov ah, 02h
+int 21h
+
+lea dx, instruction2
+mov ah, 09h
+int 21h
+mov dl, 10
+mov ah, 02h
+int 21h
+
+lea dx, space1
+mov ah, 09h
+int 21h
+mov dl, 10
+mov ah, 02h
+int 21h
+
+lea dx, instruction3
+mov ah, 09h
+int 21h
+mov dl, 10
+mov ah, 02h
+int 21h
+
+jmp again
+
+
+
+
+start:
+call delay
 call DrawBall
 call DrawPaddleRight
 call DrawPaddleLeft
@@ -52,6 +219,7 @@ call Move_left_Paddle
 call Move_right_Paddle
 call DrawPaddleLeft
 call DrawPaddleRight
+call Lives
 
 
 mov ah,01h
@@ -97,6 +265,10 @@ mov dx,Ball_y;column y position
      call RestoreBall
      call delay
      call delay
+     call delay
+     call delay
+     dec Blue_Lives 
+     
      jmp endmotion
 
 norestore:
@@ -108,6 +280,9 @@ norestore:
      call RestoreBall
      call delay
      call delay
+     call delay
+     call delay
+     dec Red_Lives
      jmp endmotion
 
 norestore2:
@@ -138,6 +313,7 @@ norestore2:
 
     success:
             jmp Xcollide
+            
 
 
 nopaddle:
@@ -184,6 +360,8 @@ nopaddle2:
 
     Xcollide:
         NEG Ball_xvelocity
+        mov ax,Ball_xvelocity
+        mov bx,Ball_yvelocity
         dec Paddle_Length
        
         ret
@@ -200,6 +378,33 @@ RET
 
 Motion ENDP
 
+Lives PROC
+    mov dl,5h;x point of score
+    mov dh,01h;y point of score
+
+    mov bh,00h
+    mov ah,02h;codes in assembly
+    int 10h
+
+    mov ax,Blue_Lives
+    call printax
+
+    mov dl,255d;x point of score
+    mov dh,00h;y point of score
+
+    mov bh,00h
+    mov ah,02h;codes in assembly
+    int 10h
+    mov ax,Red_Lives
+    call printax
+
+    mov ax,0
+    mov bx,0
+  
+    ret
+
+Lives endp
+
 
 RestoreBall PROC
 mov ax,CentreX
@@ -208,8 +413,62 @@ mov bx,CentreY
 mov Ball_x,ax
 mov Ball_y,bx
 
+
+mov dx, 0
+;Random number generator
+mov ah, 2ch;get system time
+int 21h
+;i now have random value in dl
+
+;now I have to manually divide to get the random value in the range of 4 
+
+
+Divide:
+sub dl,4d
+
+cmp dl,4d
+jle breakloop
+
+Loop Divide
+
+
+
+breakloop:
+
+;now dl is successfully randomly between 1 and 4
+
+mov ax,0
+mov bx,0
+
 mov ax,initial_Ball_xvelocity
 mov bx,initial_Ball_yvelocity
+
+cmp dl,1
+je done
+
+cmp dl,2
+je r1
+
+cmp dl,3
+je r2
+
+cmp dl,4
+je r3
+
+jmp done
+r1:
+    NEG ax 
+    jmp done
+r2:
+    NEG bx;randomly negating the direction after restoring the ball
+    jmp done
+r3:
+    NEG ax
+    NEG bx
+   
+
+
+done:
 
 mov Ball_xvelocity,ax
 mov Ball_yvelocity,bx
@@ -224,6 +483,9 @@ mov bx,0
 
 ret
 RestoreBall endp
+
+
+
 
 DrawBall proc
     
@@ -262,7 +524,7 @@ ret
 DrawBall endp
 
 
-delay proc
+delay proc;stack overflow
 mov ah, 86h
 mov dx, 0
 mov cx, 1
@@ -299,9 +561,27 @@ mov cx,Paddle_Right_x;column x position
     cmp ax,Paddle_Length
     jl DrawHorizontal1
 
+    mov ax,Paddle_Right_y
+
+    cmp ax,-10d
+    jl restorepaddle
+
+    mov ax,Paddle_Right_y
+    mov dx,Display_height
+    sub dx,0Fh
+    cmp ax,dx
+
+    jg restorepaddle
+
     mov ax,0
     mov bx,0
     mov cx,0
+    mov dx,0
+    ret
+
+    restorepaddle:
+    call Restore_Paddle_Right
+    ret
 
 
 RET
@@ -337,9 +617,28 @@ DrawPaddleLeft proc
     cmp ax,Paddle_Length
     jl DrawHorizontal2
 
+    
+      mov ax,Paddle_Left_y
+
+    cmp ax,-10d
+    jl restorepaddle1
+
+    mov ax,Paddle_Left_y
+    mov dx,Display_height
+    sub dx,0Fh
+    cmp ax,dx
+
+    jg restorepaddle1
+
     mov ax,0
     mov bx,0
     mov cx,0
+    mov dx,0
+    ret
+
+    restorepaddle1:
+    call Restore_Paddle_Left
+    ret
 
 
 RET
@@ -447,5 +746,57 @@ pop es
 pop ax
 ret
 clear_keyboard_buffer endp
+
+Restore_Paddle_Right proc
+
+mov ax,Restore_Paddle_Right_x
+mov bx,Restore_Paddle_Right_y
+mov Paddle_Right_x,ax
+mov Paddle_Right_y,bx
+
+call DrawPaddleRight
+
+mov ax,0
+mov bx,0
+
+ret
+Restore_Paddle_Right endp
+
+Restore_Paddle_Left proc
+
+mov ax,Restore_Paddle_Left_x
+mov bx,Restore_Paddle_Left_y
+mov Paddle_Left_x,ax
+mov Paddle_Left_y,bx
+
+call DrawPaddleLeft
+
+mov ax,0
+mov bx,0
+
+ret
+
+Restore_Paddle_Left endp
+
+printax proc
+    mov cx, 0
+    mov bx, 10
+@@loophere:
+    mov dx, 0
+    div bx                         
+    push ax
+    add dl, '0'                    
+    pop ax                         
+    push dx                        
+    inc cx                         
+    cmp ax, 0                      
+jnz @@loophere
+    mov ah, 2                     
+@@loophere2:
+    pop dx                         
+    int 21h                        
+    loop @@loophere2
+    ret
+printax endp
 
 END MAIN
